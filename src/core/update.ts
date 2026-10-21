@@ -9,7 +9,7 @@ import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import * as fs from 'fs';
-import { createRequire } from 'module';
+import { PACKAGE_VERSION as OPENSPEC_VERSION } from '../generated/package-info.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { getSkillReferenceTransformer, getTransformerForTool, transformToSkillReferences } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
@@ -78,9 +78,6 @@ import {
   writeSharedSkillTarget,
 } from './shared-skill-target.js';
 import { includesGitHubCopilot, writeCopilotCloudFiles, removeCopilotCloudFiles, isCopilotCloudEnabled, readCopilotCloudOptIn, findUnmanagedCloudFiles } from './github-copilot/cloud-agent.js';
-
-const require = createRequire(import.meta.url);
-const { version: OPENSPEC_VERSION } = require('../../package.json');
 
 /**
  * Captures legacy migration side effects so update can refresh newly configured

@@ -1,8 +1,7 @@
 import { execFileSync } from 'child_process';
-import { createRequire } from 'module';
 import os from 'os';
+import { PACKAGE_VERSION } from '../generated/package-info.js';
 
-const require = createRequire(import.meta.url);
 const MAX_TITLE_LENGTH = 72;
 const TITLE_PREFIX = 'Feedback: ';
 const REPRO_PROMPT =
@@ -37,15 +36,10 @@ function isGhAuthenticated(): boolean {
 }
 
 /**
- * Get OpenSpec version from package.json
+ * Get OpenSpec version (package.json's, recorded at build time)
  */
 function getVersion(): string {
-  try {
-    const { version } = require('../../package.json');
-    return version;
-  } catch {
-    return 'unknown';
-  }
+  return PACKAGE_VERSION;
 }
 
 /**

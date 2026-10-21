@@ -1,5 +1,4 @@
 import { Command, Option } from 'commander';
-import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, promises as fs } from 'fs';
@@ -21,6 +20,7 @@ import type {
   NewChangeOptions,
 } from '../commands/workflow/index.js';
 import { COMMON_FLAGS } from '../core/completions/shared-flags.js';
+import { PACKAGE_VERSION as version } from '../generated/package-info.js';
 
 // Startup cost: every command's implementation, and the packages it uses,
 // loads with `await import()` inside its action. This module and
@@ -69,8 +69,6 @@ async function failWithError(
 }
 
 const program = new Command();
-const require = createRequire(import.meta.url);
-const { version } = require('../../package.json');
 
 /**
  * Get the full command path for nested commands.

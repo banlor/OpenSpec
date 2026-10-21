@@ -8,9 +8,12 @@ import { isCiEnvironment } from '../utils/ci.js';
 import { isTelemetryOptedOutByEnv } from '../telemetry/opt-out.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { getGlobalConfig, isGlobalConfigUnreadable } from './global-config.js';
+import {
+  PACKAGE_NAME,
+  PACKAGE_VERSION as OPENSPEC_VERSION,
+} from '../generated/package-info.js';
 
 const require = createRequire(import.meta.url);
-const { name: PACKAGE_NAME, version: OPENSPEC_VERSION } = require('../../package.json');
 
 const DEFAULT_REGISTRY = 'https://registry.npmjs.org';
 const REQUEST_TIMEOUT_MS = 1500;
@@ -319,7 +322,8 @@ export async function getAvailableCliUpdate(): Promise<string | null> {
  * Directory the running CLI was loaded from, or null when it cannot be
  * resolved. Shown in the upgrade hint so anyone who upgraded but still runs an
  * old binary — a stale pnpm/volta/npx shim, or two installs on PATH — can see
- * which copy is actually answering.
+ * which copy is actually answering. A standalone executable has no package.json
+ * beside it, so this is normally null there.
  */
 export function getInstallDir(): string | null {
   try {

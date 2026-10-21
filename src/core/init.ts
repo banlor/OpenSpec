@@ -9,7 +9,7 @@ import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import * as fs from 'fs';
-import { createRequire } from 'module';
+import { PACKAGE_VERSION as OPENSPEC_VERSION } from '../generated/package-info.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import {
   classifyOpenSpecDir,
@@ -88,9 +88,6 @@ import {
   findUnmanagedCloudFiles,
   listManagedCloudFiles,
 } from './github-copilot/cloud-agent.js';
-
-const require = createRequire(import.meta.url);
-const { version: OPENSPEC_VERSION } = require('../../package.json');
 
 // -----------------------------------------------------------------------------
 // Constants
