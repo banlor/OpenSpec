@@ -5,6 +5,7 @@ import { getGlobalDataDir } from '../global-config.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
 import { parseSchema, SchemaValidationError } from './schema.js';
 import type { SchemaYaml } from './types.js';
+import { getRegisteredBuiltinSchemas } from './builtin-schemas.js';
 
 /**
  * Error thrown when loading a schema fails.
@@ -22,9 +23,14 @@ export class SchemaLoadError extends Error {
 
 /**
  * Gets the package's built-in schemas directory path.
- * Uses import.meta.url to resolve relative to the current module.
+ * Uses import.meta.url to resolve relative to the current module, unless a
+ * standalone build registered where it embeds them (see builtin-schemas.ts).
  */
 export function getPackageSchemasDir(): string {
+  const registered = getRegisteredBuiltinSchemas();
+  if (registered) {
+    return registered.dir;
+  }
   const currentFile = fileURLToPath(import.meta.url);
   // Navigate from dist/core/artifact-graph/ to package root's schemas/
   return path.join(path.dirname(currentFile), '..', '..', '..', 'schemas');
@@ -95,6 +101,25 @@ export function isSchemaDir(parentDir: string, entry: fs.Dirent): boolean {
     }
   }
   return false;
+}
+
+/**
+ * Candidate built-in schema names: the build-time list a standalone build
+ * registered, since the files it embeds may not be listable, otherwise the
+ * schema directories found in the package's schemas/ directory.
+ */
+function listPackageSchemaNames(packageDir: string): string[] {
+  const registered = getRegisteredBuiltinSchemas();
+  if (registered) {
+    return [...registered.names];
+  }
+  if (!fs.existsSync(packageDir)) {
+    return [];
+  }
+  return fs
+    .readdirSync(packageDir, { withFileTypes: true })
+    .filter((entry) => isSchemaDir(packageDir, entry))
+    .map((entry) => entry.name);
 }
 
 /**
@@ -244,14 +269,10 @@ export function listSchemas(projectRoot?: string): string[] {
 
   // Add package built-in schemas
   const packageDir = getPackageSchemasDir();
-  if (fs.existsSync(packageDir)) {
-    for (const entry of fs.readdirSync(packageDir, { withFileTypes: true })) {
-      if (isSchemaDir(packageDir, entry)) {
-        const schemaPath = path.join(packageDir, entry.name, 'schema.yaml');
-        if (fs.existsSync(schemaPath)) {
-          schemas.add(entry.name);
-        }
-      }
+  for (const name of listPackageSchemaNames(packageDir)) {
+    const schemaPath = path.join(packageDir, name, 'schema.yaml');
+    if (fs.existsSync(schemaPath)) {
+      schemas.add(name);
     }
   }
 
@@ -358,22 +379,20 @@ export function listSchemasWithInfo(projectRoot?: string): SchemaInfo[] {
 
   // Add package built-in schemas (if not overridden by project or user)
   const packageDir = getPackageSchemasDir();
-  if (fs.existsSync(packageDir)) {
-    for (const entry of fs.readdirSync(packageDir, { withFileTypes: true })) {
-      if (isSchemaDir(packageDir, entry) && !seenNames.has(entry.name)) {
-        const schemaPath = path.join(packageDir, entry.name, 'schema.yaml');
-        if (fs.existsSync(schemaPath)) {
-          try {
-            const schema = parseSchema(fs.readFileSync(schemaPath, 'utf-8'));
-            schemas.push({
-              name: entry.name,
-              description: schema.description || '',
-              artifacts: schema.artifacts.map((a) => a.id),
-              source: 'package',
-            });
-          } catch {
-            // Skip invalid schemas
-          }
+  for (const name of listPackageSchemaNames(packageDir)) {
+    if (!seenNames.has(name)) {
+      const schemaPath = path.join(packageDir, name, 'schema.yaml');
+      if (fs.existsSync(schemaPath)) {
+        try {
+          const schema = parseSchema(fs.readFileSync(schemaPath, 'utf-8'));
+          schemas.push({
+            name,
+            description: schema.description || '',
+            artifacts: schema.artifacts.map((a) => a.id),
+            source: 'package',
+          });
+        } catch {
+          // Skip invalid schemas
         }
       }
     }
