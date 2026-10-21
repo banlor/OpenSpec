@@ -155,7 +155,18 @@ function main() {
       ]);
     } else if (tool === 'deno') {
       record.versions.deno = version('deno', ['--version']);
-      exec('deno', ['compile', '--allow-all', '--include', 'schemas', '--output', rel(output), 'bin/openspec.js']);
+      // --no-check: the entry is compiled JS. Type-checking it would need
+      // @types/node, which the production-only install leaves out.
+      exec('deno', [
+        'compile',
+        '--no-check',
+        '--allow-all',
+        '--include',
+        'schemas',
+        '--output',
+        rel(output),
+        'bin/openspec.js',
+      ]);
     } else {
       const [major, minor] = process.versions.node.split('.').map(Number);
       if (major < 25 || (major === 25 && minor < 5)) {
