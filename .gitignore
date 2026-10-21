@@ -85,6 +85,8 @@ out
 dist/
 # Written by build.js from package.json
 /src/generated/
+# Standalone executables and their measurements (scripts/standalone/)
+/dist-standalone/
 
 # Gatsby files
 .cache/
